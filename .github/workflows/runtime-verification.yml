@@ -1,0 +1,37 @@
+name: Runtime verification
+
+on:
+  push:
+    branches: [audit/runtime-verification]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: skills/directing-stickman-videos
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: skills/directing-stickman-videos/package-lock.json
+      - name: Install FFmpeg and Python
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg python3
+      - name: Install dependencies
+        run: npm ci
+      - name: Check runtime prerequisites
+        run: npm run doctor
+      - name: Run Node.js runtime tests
+        run: npm test
+      - name: Run Python unit tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
